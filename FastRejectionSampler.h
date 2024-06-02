@@ -53,7 +53,6 @@ public:
 
         double cumulativeSumOfWeights = 0.0;
         for (int level = _minWeightLevel; level <= _maxWeightLevel; ++level) {
-            if (_levelToWeights.at(level).first == 0.0) continue;
             cumulativeSumOfWeights += _levelToWeights.at(level).first;
             _levelsCDF[level - _minWeightLevel] = (cumulativeSumOfWeights);
         }
@@ -61,6 +60,12 @@ public:
     }
     
 
+    size_t sample() {
+
+
+
+        
+    }
 
     const std::vector<double> & getLevelsCDF() {
         return _levelsCDF;
