@@ -11,7 +11,9 @@
 // #include <cmath>
 int main() {
 
-    FastRejectionSampler fars({6.8, 0.03,20.1,0.5,1.7,4.2,10.3});
+
+
+    FastRejectionSampler fars({6.8, 0.03,20.1,0.5,1.7,4.2,10.3}, 0.001, 50.0);
 
     auto gen = std::mt19937_64(0);
 
