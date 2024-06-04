@@ -11,45 +11,36 @@
 // #include <cmath>
 int main() {
 
+    auto gen = std::mt19937_64(34);
+    auto dist = std::uniform_real_distribution(0.001, 50.0);
 
+    size_t numberOfWeights = 1000;
+    auto indexSampler = std::uniform_int_distribution<int>(0, numberOfWeights - 1);
+    std::vector<double> weights;
 
-    FastRejectionSampler fars({6.8, 0.03,20.1,0.5,1.7,4.2,10.3}, 0.001, 50.0);
-
-    auto gen = std::mt19937_64(0);
-
-
-    size_t numSamples = 10000;
-    std::map<int, int> hist;
-    for (int n = 0; n != numSamples; ++n)
-        ++hist[fars.sample(gen)];
- 
-    for (auto const& [x, y] : hist)
-            std::cout  << x << " -> "  <<  y   << '\n';
+    for (size_t i = 0; i < numberOfWeights; i++) {
+        double weight = dist(gen);
+        weights.push_back(weight);
+    }
     
-    std::cout << "\n";
-    fars.updateWeight(1, 15.0);
+    FastRejectionSampler fars(weights, 0.001, 50.0);
 
-    hist.clear();
+    size_t numberOfUpdates = 10000;
 
-    for (int n = 0; n != numSamples; ++n)
-        ++hist[fars.sample(gen)];
- 
-    for (auto const& [x, y] : hist)
-            std::cout  << x << " -> "  <<  y   << '\n';
+    for (size_t i = 0; i < numberOfUpdates; i++) {
+        size_t sample = fars.sample(gen);
+        if (sample < 0) {
+            std::cout << "INVALID INDEX=" << sample << "\n";
+        }
+        double newWeight = dist(gen);
+        int indexToUpdate = indexSampler(gen);
+        fars.updateWeight(indexToUpdate, newWeight);
+        if (fars.checkValidity()){
+            std::cout << "FAILED CHECK!\n";
 
-    std::cout << "\n";
-    fars.updateWeight(5, 42.0);
-
-    hist.clear();
-
-    for (int n = 0; n != numSamples; ++n)
-        ++hist[fars.sample(gen)];
- 
-    for (auto const& [x, y] : hist)
-            std::cout  << x << " -> "  <<  y   << '\n';
-
-
-
+        }
+        
+    }
 
     return 0;
 }

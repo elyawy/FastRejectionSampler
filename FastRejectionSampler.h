@@ -40,7 +40,6 @@ public:
 
         for (int i = 0; i < numLevels; ++i) {
             _levelToWeights[i] = std::make_pair<double, std::vector<size_t>>(0, {});
-            std::cout << _levelToWeights.size() << "\n";
         }
 
 
@@ -48,12 +47,15 @@ public:
             _totalWeightsSum += _weights[i];
             int level = static_cast<int>(std::log2(_weights[i]));
             if (level >= 0) level += 1;
-            std::cout << "_weights[i]=" << _weights[i] <<"\n";
+            // std::cout << "_weights[i]=" << _weights[i] << " level=" << level <<"\n";
 
-            std::cout << "index=" << i << " is in level=" <<level<<"\n";
+            // std::cout << "index=" << i << " is in level=" <<level<<"\n";
             level -= _minWeightLevel;
-            std::cout << "index=" << i << " is in level=" <<level<<"\n";
-            std::cout << "_levelToWeights.size=" << _levelToWeights.size() <<"\n";
+            // level += 1;
+            // std::cout << "_weights[i]=" << _weights[i] << " level=" << level <<"\n";
+
+            // std::cout << "index=" << i << " is in level=" <<level<<"\n";
+            // std::cout << "_levelToWeights.size=" << _levelToWeights.size() <<"\n";
 
             _levelToWeights.at(level).first += _weights[i];
             size_t innerIndex = _levelToWeights.at(level).second.size();
@@ -81,7 +83,8 @@ public:
 
         int correctedLevel =  selectedLevel + _minWeightLevel;
         double levelConversion = 1.0 / std::pow(2, correctedLevel);
-        auto binsInSelectedLevel = _levelToWeights.at(correctedLevel).second;
+        auto binsInSelectedLevel = _levelToWeights.at(selectedLevel).second;
+
 
         auto binSampler = std::uniform_int_distribution<int>(0, binsInSelectedLevel.size() - 1);
 
@@ -113,30 +116,30 @@ public:
         _totalWeightsSum += newWeight;
 
         if (oldLevel == newLevel) {
-            _levelToWeights.at(newLevel).first -= oldWeight;
-            _levelToWeights.at(newLevel).first += newWeight;
-            _levelsWeights[newLevel] = _levelToWeights.at(newLevel).first;
+            _levelToWeights.at(newLevelIndex).first -= oldWeight;
+            _levelToWeights.at(newLevelIndex).first += newWeight;
+            _levelsWeights[newLevelIndex] = _levelToWeights.at(newLevelIndex).first;
 
             _weights[weightIndex] = newWeight;
             return;
         }
 
         // remove weight from old level
-        _levelToWeights.at(oldLevel).first -= oldWeight;
-        _levelsWeights[oldLevel] = _levelToWeights.at(oldLevel).first;
-        size_t numberOfBins = _levelToWeights.at(oldLevel).second.size();
+        _levelToWeights.at(oldLevelIndex).first -= oldWeight;
+        _levelsWeights[oldLevelIndex] = _levelToWeights.at(oldLevelIndex).first;
+        size_t numberOfBins = _levelToWeights.at(oldLevelIndex).second.size();
         if (numberOfBins > 1) {
-            size_t weightIndexOfLastBin = _levelToWeights.at(oldLevel).second[numberOfBins - 1];
-            _levelToWeights.at(oldLevel).second[oldBinIndex] = weightIndexOfLastBin;
+            size_t weightIndexOfLastBin = _levelToWeights.at(oldLevelIndex).second[numberOfBins - 1];
+            _levelToWeights.at(oldLevelIndex).second[oldBinIndex] = weightIndexOfLastBin;
             _weightIndexToBin[weightIndexOfLastBin] = oldBinIndex;
         }
-        _levelToWeights.at(oldLevel).second.pop_back();
+        _levelToWeights.at(oldLevelIndex).second.pop_back();
 
         // add to new level
-        _levelToWeights.at(newLevel).first += newWeight;
-        _weightIndexToBin[weightIndex] = _levelToWeights.at(newLevel).second.size();
-        _levelToWeights.at(newLevel).second.push_back(weightIndex);
-        _levelsWeights[newLevel] = _levelToWeights.at(newLevel).first;
+        _levelToWeights.at(newLevelIndex).first += newWeight;
+        _weightIndexToBin[weightIndex] = _levelToWeights.at(newLevelIndex).second.size();
+        _levelToWeights.at(newLevelIndex).second.push_back(weightIndex);
+        _levelsWeights[newLevelIndex] = _levelToWeights.at(newLevelIndex).first;
 
         // update weight in the original weights vector
         _weights[weightIndex] = newWeight;
@@ -156,8 +159,14 @@ public:
         return level + _minWeightLevel;
     }
 
+    bool checkValidity(){
+        double sum;
+        for(size_t i=0; i < _weights.size(); ++i) {
+            sum += _weights[i];
+        }
+        if (sum != _totalWeightsSum) return false;
 
-
+    }
 
     ~FastRejectionSampler(){};
 };
