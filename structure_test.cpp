@@ -15,6 +15,8 @@ int main() {
     auto dist = std::uniform_real_distribution(0.001, 50.0);
 
     size_t numberOfWeights = 1000;
+    size_t numberOfUpdates = 10000;
+
     auto indexSampler = std::uniform_int_distribution<int>(0, numberOfWeights - 1);
     std::vector<double> weights;
 
@@ -25,7 +27,6 @@ int main() {
     
     FastRejectionSampler fars(weights, 0.001, 50.0);
 
-    size_t numberOfUpdates = 10000;
 
     for (size_t i = 0; i < numberOfUpdates; i++) {
         size_t sample = fars.sample(gen);
@@ -35,9 +36,9 @@ int main() {
         double newWeight = dist(gen);
         int indexToUpdate = indexSampler(gen);
         fars.updateWeight(indexToUpdate, newWeight);
-        if (fars.checkValidity()){
+        if (!fars.checkValidity()){
+            std::cout << "update number=" << i << "\n";
             std::cout << "FAILED CHECK!\n";
-
         }
         
     }

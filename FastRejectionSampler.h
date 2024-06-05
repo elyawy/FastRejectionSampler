@@ -31,9 +31,9 @@ public:
         if (_minWeightLevel >= 0) _minWeightLevel += 1;
         _maxWeightLevel = static_cast<int>(std::log2(maxWeight)) + 1;
         size_t numLevels = _maxWeightLevel - _minWeightLevel + 1;
-        std::cout << "_minWeightLevel=" << _minWeightLevel << "\n"; 
+        // std::cout << "_minWeightLevel=" << _minWeightLevel << "\n"; 
 
-        std::cout << "numLevels=" << numLevels << "\n"; 
+        // std::cout << "numLevels=" << numLevels << "\n"; 
 
         _levelToWeights.resize(numLevels);
         _levelsWeights.resize(numLevels, 0.0);
@@ -160,12 +160,22 @@ public:
     }
 
     bool checkValidity(){
-        double sum;
+        double epsilon = 1e-10;
+        double sum = 0.0;
         for(size_t i=0; i < _weights.size(); ++i) {
             sum += _weights[i];
         }
-        if (sum != _totalWeightsSum) return false;
+        if (abs(sum - _totalWeightsSum) > epsilon) return false;
+        // std::cout << "Passed sum of all weights test.\n";
 
+        sum = 0.0;
+        for (size_t i = 0; i < _levelsWeights.size(); i++) {
+            sum += _levelsWeights[i];
+        }
+        if (abs(sum - _totalWeightsSum) > epsilon) return false;
+        // std::cout << "Passed sum of level weights test.\n";
+
+        return true;
     }
 
     ~FastRejectionSampler(){};
