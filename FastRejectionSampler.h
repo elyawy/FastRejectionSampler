@@ -14,7 +14,7 @@ private:
     double _minWeight;
     double _maxWeight;
     std::uniform_real_distribution<double> _biasedCoin;
-    std::vector<std::pair<double, std::vector<size_t>>> _levelToWeights;
+    std::vector<std::vector<size_t>> _levelToWeights;
     std::unordered_map<size_t, size_t> _weightIndexToBin;
 
     double _totalWeightsSum;
@@ -38,9 +38,9 @@ public:
         _levelToWeights.resize(numLevels);
         _levelsWeights.resize(numLevels, 0.0);
 
-        for (int i = 0; i < numLevels; ++i) {
-            _levelToWeights[i] = std::make_pair<double, std::vector<size_t>>(0, {});
-        }
+        // for (int i = 0; i < numLevels; ++i) {
+        //     _levelToWeights[i] =  std::vector<size_t>({});
+        // }
 
 
         for(size_t i=0; i < _weights.size(); ++i) {
@@ -57,12 +57,12 @@ public:
             // std::cout << "index=" << i << " is in level=" <<level<<"\n";
             // std::cout << "_levelToWeights.size=" << _levelToWeights.size() <<"\n";
 
-            _levelToWeights.at(level).first += _weights[i];
-            size_t innerIndex = _levelToWeights.at(level).second.size();
-            _levelToWeights.at(level).second.push_back(i);
+            // _levelToWeights.at(level).first += _weights[i];
+            _levelsWeights[level] += _weights[i];
+            size_t innerIndex = _levelToWeights.at(level).size();
+            _levelToWeights.at(level).push_back(i);
             _weightIndexToBin[i] = innerIndex;
 
-            _levelsWeights[level] = _levelToWeights.at(level).first;
         }
 
     }
@@ -83,9 +83,9 @@ public:
 
         int correctedLevel =  selectedLevel + _minWeightLevel;
         double levelConversion = 1.0 / std::pow(2, correctedLevel);
-        auto binsInSelectedLevel = _levelToWeights.at(selectedLevel).second;
+        auto binsInSelectedLevel = _levelToWeights.at(selectedLevel);
 
-
+        
         auto binSampler = std::uniform_int_distribution<int>(0, binsInSelectedLevel.size() - 1);
 
         // rejection sampling:
@@ -116,30 +116,27 @@ public:
         _totalWeightsSum += newWeight;
 
         if (oldLevel == newLevel) {
-            _levelToWeights.at(newLevelIndex).first -= oldWeight;
-            _levelToWeights.at(newLevelIndex).first += newWeight;
-            _levelsWeights[newLevelIndex] = _levelToWeights.at(newLevelIndex).first;
+            _levelsWeights[newLevelIndex] -= oldWeight;
+            _levelsWeights[newLevelIndex] += newWeight;
 
             _weights[weightIndex] = newWeight;
             return;
         }
 
         // remove weight from old level
-        _levelToWeights.at(oldLevelIndex).first -= oldWeight;
-        _levelsWeights[oldLevelIndex] = _levelToWeights.at(oldLevelIndex).first;
-        size_t numberOfBins = _levelToWeights.at(oldLevelIndex).second.size();
+        _levelsWeights[oldLevelIndex] -= oldWeight;
+        size_t numberOfBins = _levelToWeights.at(oldLevelIndex).size();
         if (numberOfBins > 1) {
-            size_t weightIndexOfLastBin = _levelToWeights.at(oldLevelIndex).second[numberOfBins - 1];
-            _levelToWeights.at(oldLevelIndex).second[oldBinIndex] = weightIndexOfLastBin;
+            size_t weightIndexOfLastBin = _levelToWeights.at(oldLevelIndex)[numberOfBins - 1];
+            _levelToWeights.at(oldLevelIndex)[oldBinIndex] = weightIndexOfLastBin;
             _weightIndexToBin[weightIndexOfLastBin] = oldBinIndex;
         }
-        _levelToWeights.at(oldLevelIndex).second.pop_back();
+        _levelToWeights.at(oldLevelIndex).pop_back();
 
         // add to new level
-        _levelToWeights.at(newLevelIndex).first += newWeight;
-        _weightIndexToBin[weightIndex] = _levelToWeights.at(newLevelIndex).second.size();
-        _levelToWeights.at(newLevelIndex).second.push_back(weightIndex);
-        _levelsWeights[newLevelIndex] = _levelToWeights.at(newLevelIndex).first;
+        _levelsWeights[newLevelIndex] += newWeight;
+        _weightIndexToBin[weightIndex] = _levelToWeights.at(newLevelIndex).size();
+        _levelToWeights.at(newLevelIndex).push_back(weightIndex);
 
         // update weight in the original weights vector
         _weights[weightIndex] = newWeight;
@@ -152,7 +149,11 @@ public:
 
 
     double getLevelWeight(int level) {
-        return std::get<0>(_levelToWeights.at(level));
+        return _levelsWeights.at(level);
+    }
+
+    double getSumOfWeights() {
+        return _totalWeightsSum;
     }
 
     int getLevelBin(int level) {
