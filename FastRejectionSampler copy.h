@@ -49,6 +49,9 @@ public:
             _weightIndexToBin[i] = innerIndex;
 
         }
+
+
+
     }
     
     template <typename Generator>
@@ -101,6 +104,7 @@ public:
 
         _totalWeightsSum -= oldWeight;
         _totalWeightsSum += newWeight;
+
 
         if (oldLevel == newLevel) {
             _levelsWeights[newLevelIndex] -= oldWeight;
