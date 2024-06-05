@@ -6,6 +6,7 @@
 #include <algorithm>
 
 #include <iostream>
+
 class FastRejectionSampler
 {
 private:
@@ -31,33 +32,16 @@ public:
         if (_minWeightLevel >= 0) _minWeightLevel += 1;
         _maxWeightLevel = static_cast<int>(std::log2(maxWeight)) + 1;
         size_t numLevels = _maxWeightLevel - _minWeightLevel + 1;
-        // std::cout << "_minWeightLevel=" << _minWeightLevel << "\n"; 
-
-        // std::cout << "numLevels=" << numLevels << "\n"; 
 
         _levelToWeights.resize(numLevels);
         _levelsWeights.resize(numLevels, 0.0);
-
-        // for (int i = 0; i < numLevels; ++i) {
-        //     _levelToWeights[i] =  std::vector<size_t>({});
-        // }
 
 
         for(size_t i=0; i < _weights.size(); ++i) {
             _totalWeightsSum += _weights[i];
             int level = static_cast<int>(std::log2(_weights[i]));
             if (level >= 0) level += 1;
-            // std::cout << "_weights[i]=" << _weights[i] << " level=" << level <<"\n";
-
-            // std::cout << "index=" << i << " is in level=" <<level<<"\n";
             level -= _minWeightLevel;
-            // level += 1;
-            // std::cout << "_weights[i]=" << _weights[i] << " level=" << level <<"\n";
-
-            // std::cout << "index=" << i << " is in level=" <<level<<"\n";
-            // std::cout << "_levelToWeights.size=" << _levelToWeights.size() <<"\n";
-
-            // _levelToWeights.at(level).first += _weights[i];
             _levelsWeights[level] += _weights[i];
             size_t innerIndex = _levelToWeights.at(level).size();
             _levelToWeights.at(level).push_back(i);
@@ -76,7 +60,6 @@ public:
 
         for (int i = 0; i < _levelsWeights.size(); i++) {
             cumulativeWeight += _levelsWeights[i];
-            // std::cout << "level=" << i << " _levelsWeights=" << _levelsWeights[i] << "\n";  
             selectedLevel = i;
             if (levelSampler < cumulativeWeight) break;
         }
@@ -102,6 +85,10 @@ public:
 
 
     void updateWeight(int weightIndex, double newWeight) {
+        if ((newWeight > _maxWeight) || (newWeight < _minWeight)) {
+            std::cout << "new weight is out of bounds\n";
+            abort();
+        }
         double oldWeight = _weights[weightIndex];
         int oldLevel = static_cast<int>(std::log2(_weights[weightIndex]));
         size_t oldBinIndex = _weightIndexToBin.at(weightIndex);
@@ -167,14 +154,12 @@ public:
             sum += _weights[i];
         }
         if (abs(sum - _totalWeightsSum) > epsilon) return false;
-        // std::cout << "Passed sum of all weights test.\n";
 
         sum = 0.0;
         for (size_t i = 0; i < _levelsWeights.size(); i++) {
             sum += _levelsWeights[i];
         }
         if (abs(sum - _totalWeightsSum) > epsilon) return false;
-        // std::cout << "Passed sum of level weights test.\n";
 
         return true;
     }

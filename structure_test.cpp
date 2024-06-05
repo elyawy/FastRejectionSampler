@@ -1,14 +1,9 @@
-
+#include <iostream>
+#include <iomanip>
+#include <random>
 
 #include "FastRejectionSampler.h"
-// #include "avl_array.h"
-#include <iostream>
-#include <random>
-#include <map>
 
-#include <iomanip>
-// #include <unordered_set>
-// #include <cmath>
 int main() {
 
     auto gen = std::mt19937_64(56);
